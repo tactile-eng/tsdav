@@ -1,7 +1,18 @@
-import { fetch } from 'cross-fetch';
+import { fetch as fetch$1 } from 'cross-fetch';
 import getLogger from 'debug';
 import convert from 'xml-js';
 import { encode } from 'base-64';
+
+let overriddenFetch = undefined;
+function replaceFetch(newFetch) {
+    overriddenFetch = newFetch;
+}
+function fetch(input, init) {
+    if (overriddenFetch !== undefined) {
+        return overriddenFetch(input, init);
+    }
+    return fetch$1(input, init);
+}
 
 var DAVNamespace;
 (function (DAVNamespace) {
@@ -1485,7 +1496,10 @@ var authHelpers = /*#__PURE__*/Object.freeze({
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const createDAVClient = async (params) => {
     var _a;
-    const { serverUrl, credentials, authMethod, defaultAccountType, authFunction } = params;
+    const { serverUrl, credentials, authMethod, defaultAccountType, authFunction, overrideFetch } = params;
+    if (overrideFetch !== undefined) {
+        replaceFetch(overrideFetch);
+    }
     let authHeaders = {};
     switch (authMethod) {
         case 'Basic':

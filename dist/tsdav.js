@@ -731,6 +731,17 @@ function requireBrowserPonyfill () {
 
 var browserPonyfillExports = requireBrowserPonyfill();
 
+let overriddenFetch = undefined;
+function replaceFetch(newFetch) {
+    overriddenFetch = newFetch;
+}
+function fetch(input, init) {
+    if (overriddenFetch !== undefined) {
+        return overriddenFetch(input, init);
+    }
+    return browserPonyfillExports.fetch(input, init);
+}
+
 var global$1 = (typeof global !== "undefined" ? global :
   typeof self !== "undefined" ? self :
   typeof window !== "undefined" ? window : {});
@@ -9248,7 +9259,7 @@ const davRequest = async (params) => {
         ...fetchOptions
     };
     delete fetchOptionsWithoutHeaders.headers;
-    const davResponse = await browserPonyfillExports.fetch(url, {
+    const davResponse = await fetch(url, {
         headers: {
             'Content-Type': 'text/xml;charset=UTF-8',
             ...cleanupFalsy(headers),
@@ -9370,7 +9381,7 @@ const propfind = async (params) => {
 };
 const createObject = async (params) => {
     const { url, data, headers, headersToExclude, fetchOptions = {} } = params;
-    return browserPonyfillExports.fetch(url, {
+    return fetch(url, {
         method: 'PUT',
         body: data,
         headers: excludeHeaders(headers, headersToExclude),
@@ -9379,7 +9390,7 @@ const createObject = async (params) => {
 };
 const updateObject = async (params) => {
     const { url, data, etag, headers, headersToExclude, fetchOptions = {} } = params;
-    return browserPonyfillExports.fetch(url, {
+    return fetch(url, {
         method: 'PUT',
         body: data,
         headers: excludeHeaders(cleanupFalsy({ 'If-Match': etag, ...headers }), headersToExclude),
@@ -9388,7 +9399,7 @@ const updateObject = async (params) => {
 };
 const deleteObject = async (params) => {
     const { url, headers, etag, headersToExclude, fetchOptions = {} } = params;
-    return browserPonyfillExports.fetch(url, {
+    return fetch(url, {
         method: 'DELETE',
         headers: excludeHeaders(cleanupFalsy({ 'If-Match': etag, ...headers }), headersToExclude),
         ...fetchOptions,
@@ -10312,7 +10323,7 @@ const serviceDiscovery = async (params) => {
     const uri = new URL(`/.well-known/${account.accountType}`, endpoint);
     uri.protocol = (_a = endpoint.protocol) !== null && _a !== void 0 ? _a : 'http';
     try {
-        const response = await browserPonyfillExports.fetch(uri.href, {
+        const response = await fetch(uri.href, {
             headers: excludeHeaders(headers, headersToExclude),
             method: 'PROPFIND',
             redirect: 'manual',
@@ -10667,7 +10678,7 @@ const fetchOauthTokens = async (credentials, fetchOptions) => {
     });
     debug(credentials.tokenUrl);
     debug(param.toString());
-    const response = await browserPonyfillExports.fetch(credentials.tokenUrl, {
+    const response = await fetch(credentials.tokenUrl, {
         method: 'POST',
         body: param.toString(),
         headers: {
@@ -10699,7 +10710,7 @@ const refreshAccessToken = async (credentials, fetchOptions) => {
         refresh_token: credentials.refreshToken,
         grant_type: 'refresh_token',
     });
-    const response = await browserPonyfillExports.fetch(credentials.tokenUrl, {
+    const response = await fetch(credentials.tokenUrl, {
         method: 'POST',
         body: param.toString(),
         headers: {
@@ -10750,7 +10761,10 @@ var authHelpers = /*#__PURE__*/Object.freeze({
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const createDAVClient = async (params) => {
     var _a;
-    const { serverUrl, credentials, authMethod, defaultAccountType, authFunction } = params;
+    const { serverUrl, credentials, authMethod, defaultAccountType, authFunction, overrideFetch } = params;
+    if (overrideFetch !== undefined) {
+        replaceFetch(overrideFetch);
+    }
     let authHeaders = {};
     switch (authMethod) {
         case 'Basic':

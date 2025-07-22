@@ -12,6 +12,7 @@ export declare const createDAVClient: (params: {
     authMethod?: "Basic" | "Oauth" | "Digest" | "Custom";
     authFunction?: (credentials: DAVCredentials) => Promise<Record<string, string>>;
     defaultAccountType?: DAVAccount["accountType"] | undefined;
+    overrideFetch?: ((input: RequestInfo | URL, init?: RequestInit) => Promise<Response>);
 }) => Promise<{
     davRequest: (params0: {
         url: string;

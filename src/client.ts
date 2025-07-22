@@ -49,6 +49,7 @@ import {
 } from './types/models';
 import { defaultParam, getBasicAuthHeaders, getOauthHeaders } from './util/authHelpers';
 import { Optional } from './util/typeHelpers';
+import { replaceFetch } from './util/fetchHelper';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createDAVClient = async (params: {
@@ -57,8 +58,13 @@ export const createDAVClient = async (params: {
   authMethod?: 'Basic' | 'Oauth' | 'Digest' | 'Custom';
   authFunction?: (credentials: DAVCredentials) => Promise<Record<string, string>>;
   defaultAccountType?: DAVAccount['accountType'] | undefined;
+  overrideFetch?: ((input: RequestInfo | URL, init?: RequestInit) => Promise<Response>)
 }) => {
-  const { serverUrl, credentials, authMethod, defaultAccountType, authFunction } = params;
+  const { serverUrl, credentials, authMethod, defaultAccountType, authFunction, overrideFetch } = params;
+
+  if (overrideFetch !== undefined) {
+    replaceFetch(overrideFetch);
+  }
 
   let authHeaders: Record<string, string> = {};
   switch (authMethod) {

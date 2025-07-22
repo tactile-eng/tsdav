@@ -293,6 +293,7 @@ declare const _default: {
         authMethod?: "Basic" | "Oauth" | "Digest" | "Custom";
         authFunction?: (credentials: import("./types/models").DAVCredentials) => Promise<Record<string, string>>;
         defaultAccountType?: import("./types/models").DAVAccount["accountType"] | undefined;
+        overrideFetch?: ((input: RequestInfo | URL, init?: RequestInit) => Promise<Response>);
     }) => Promise<{
         davRequest: (params0: {
             url: string;
